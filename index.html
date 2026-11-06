@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta name="description" content="精选项目开发合集">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>精选项目开发合集</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark">6</span>
+      <div>
+        <h1>精选项目开发合集</h1>
+        <p>基于刘小排与笑来文章项目机会，各选 3 个最优项目并做成可运行 MVP 原型。</p>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="项目导航">
+      <button data-view="matrix" class="active">评分矩阵</button>
+      <button data-view="liu">刘小排 Top 3</button>
+      <button data-view="xiao">笑来 Top 3</button>
+      <button data-view="prototype">原型工作台</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="matrix" class="view active">
+      <div class="section-head">
+        <div>
+          <h2>决策评分</h2>
+          <p>维度：市场欢迎度、盈利空间、竞争格局、复杂度反向分、内容质量、可迭代性。每项 1-5 分，总分 30。</p>
+        </div>
+        <div class="legend">
+          <span><b class="s"></b>S：优先开发</span>
+          <span><b class="a"></b>A：继续验证</span>
+          <span><b class="b"></b>B：暂缓</span>
+        </div>
+      </div>
+      <div id="matrixGrid" class="matrix-grid"></div>
+    </section>
+
+    <section id="liu" class="view">
+      <div class="section-head">
+        <div>
+          <h2>刘小排方向 Top 3</h2>
+          <p>选择逻辑：更偏真实需求、可收费、能低成本起量，并且和文章里的 SOP、Skill、需求倒做、增长自动化强相关。</p>
+        </div>
+      </div>
+      <div id="liuCards" class="project-list"></div>
+    </section>
+
+    <section id="xiao" class="view">
+      <div class="section-head">
+        <div>
+          <h2>笑来方向 Top 3</h2>
+          <p>选择逻辑：更偏 AI 时代无法外包的能力训练，尤其是阅读耐力、推理评价力和可组合计算能力。</p>
+        </div>
+      </div>
+      <div id="xiaoCards" class="project-list"></div>
+    </section>
+
+    <section id="prototype" class="view">
+      <div class="section-head">
+        <div>
+          <h2>原型工作台</h2>
+          <p>6 个项目各自保留最小可用交互，用于演示、路演、继续开发或拆成独立产品。</p>
+        </div>
+        <select id="prototypePicker" aria-label="选择项目原型"></select>
+      </div>
+      <div id="prototypePanel"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>生成时间：2026-06-05。当前版本为静态 MVP，无后端、无外部 API、无联网依赖。</p>
+  </footer>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
