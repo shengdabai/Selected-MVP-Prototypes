@@ -411,6 +411,11 @@ function text(id) {
   return document.getElementById(id).value.trim();
 }
 
+function escapeHtml(value) {
+  const entities = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  return String(value).replace(/[&<>"']/g, (character) => entities[character]);
+}
+
 function runPrototype(id) {
   const out = document.getElementById(`output-${id}`);
   if (id === "skill-factory") {
@@ -419,16 +424,16 @@ function runPrototype(id) {
     const tools = text("sf-tools");
     out.innerHTML = `
       <h4>生成的 Skill 草案</h4>
-      <pre>name: ${role}-automation-skill
-description: 将 ${role} 的重复 SOP 转成可测试、可复用的 AI 技能。
+      <pre>name: ${escapeHtml(role)}-automation-skill
+description: 将 ${escapeHtml(role)} 的重复 SOP 转成可测试、可复用的 AI 技能。
 
 ## 触发条件
-当用户要求执行、复盘或改进以下流程时调用：${sop}
+当用户要求执行、复盘或改进以下流程时调用：${escapeHtml(sop)}
 
 ## 输入
 - 目标对象
 - 时间范围
-- 可访问工具：${tools}
+- 可访问工具：${escapeHtml(tools)}
 
 ## 执行步骤
 1. 澄清目标和风险边界。
@@ -447,7 +452,7 @@ description: 将 ${role} 的重复 SOP 转成可测试、可复用的 AI 技能�
     const problem = text("dc-problem");
     out.innerHTML = `
       <h4>需求倒做填空题</h4>
-      <p><b>${user}</b>，在 <b>${scene}</b> 时，愿意花 <b>${price}</b>，解决 <b>${problem}</b>。</p>
+      <p><b>${escapeHtml(user)}</b>，在 <b>${escapeHtml(scene)}</b> 时，愿意花 <b>${escapeHtml(price)}</b>，解决 <b>${escapeHtml(problem)}</b>。</p>
       <h4>验证优先级</h4>
       <div class="metric-row">
         <div class="metric"><strong>4</strong><span>付费清晰度</span></div>
@@ -465,14 +470,14 @@ description: 将 ${role} 的重复 SOP 转成可测试、可复用的 AI 技能�
     const platform = text("ir-platform");
     out.innerHTML = `
       <h4>红人线索演示表</h4>
-      <p>竞品：<b>${competitor}</b>；领域：${niche}；平台：${platform}</p>
+      <p>竞品：<b>${escapeHtml(competitor)}</b>；领域：${escapeHtml(niche)}；平台：${escapeHtml(platform)}</p>
       <div class="kanban">
         <div class="lane"><h4>高优先级</h4><div class="item">AI meme 教程频道<br><small>匹配度 92 · 曾发竞品教程</small></div><div class="item">TikTok 模板创作者<br><small>匹配度 88 · 近 7 天互动高</small></div></div>
         <div class="lane"><h4>待验证</h4><div class="item">设计工具测评博主<br><small>匹配度 76 · 需查邮箱</small></div><div class="item">小众 SaaS newsletter<br><small>匹配度 72 · 适合联盟链接</small></div></div>
         <div class="lane"><h4>暂不触达</h4><div class="item">泛娱乐账号<br><small>互动高但用户不准</small></div></div>
       </div>
       <h4>Outreach 草稿</h4>
-      <p>你好，我看到你之前介绍过 ${competitor}。我们做了一个更适合 ${niche} 的轻量工具，愿意提供免费额度和专属优惠码，方便你做一次真实测评。</p>
+      <p>你好，我看到你之前介绍过 ${escapeHtml(competitor)}。我们做了一个更适合 ${escapeHtml(niche)} 的轻量工具，愿意提供免费额度和专属优惠码，方便你做一次真实测评。</p>
     `;
   }
   if (id === "quality-gate") {
@@ -492,31 +497,35 @@ description: 将 ${role} 的重复 SOP 转成可测试、可复用的 AI 技能�
         <div class="metric"><strong>${hasTestRemoval ? "有" : "无"}</strong><span>测试删除</span></div>
       </div>
       <h4>风险说明</h4>
-      <p>${concern}</p>
+      <p>${escapeHtml(concern)}</p>
       <ul>
-        <li>${framework} 项目中，用户输入拼接到请求参数时，需要校验和编码。</li>
+        <li>${escapeHtml(framework)} 项目中，用户输入拼接到请求参数时，需要校验和编码。</li>
         <li>如果 AI 删除了测试断言，必须补回等价测试后再合并。</li>
         <li>涉及登录态数据读取时，需要确认服务端鉴权，而不是只依赖前端传参。</li>
       </ul>
       <h4>给 Codex/Cursor 的修复 Prompt</h4>
-      <pre>请审查这段 ${framework} 代码，重点检查鉴权、输入校验、测试缺口和可维护性。
+      <pre>请审查这段 ${escapeHtml(framework)} 代码，重点检查鉴权、输入校验、测试缺口和可维护性。
 不要扩大重构范围；只给最小修复补丁，并补充能失败再通过的测试。</pre>
     `;
   }
   if (id === "reading-marathon") {
     const title = text("rm-title");
-    const minutes = Number(text("rm-minutes")) || 45;
+    const requestedMinutes = Number(text("rm-minutes"));
+    const minutes = Number.isSafeInteger(requestedMinutes) && requestedMinutes > 0 ? requestedMinutes : 45;
+    // Round cumulative boundaries so the four stages always sum to the total.
+    const boundaries = [0, .45, .65, .85, 1].map((fraction) => Math.round(minutes * fraction));
+    const stages = boundaries.slice(1).map((end, index) => end - boundaries[index]);
     const goal = text("rm-goal");
     out.innerHTML = `
       <h4>训练安排</h4>
       <div class="metric-row">
-        <div class="metric"><strong>${Math.round(minutes * .45)}</strong><span>分钟无摘要阅读</span></div>
-        <div class="metric"><strong>${Math.round(minutes * .2)}</strong><span>分钟段落复述</span></div>
-        <div class="metric"><strong>${Math.round(minutes * .2)}</strong><span>分钟论证链标注</span></div>
-        <div class="metric"><strong>${Math.round(minutes * .15)}</strong><span>分钟延迟回忆</span></div>
+        <div class="metric"><strong>${stages[0]}</strong><span>分钟无摘要阅读</span></div>
+        <div class="metric"><strong>${stages[1]}</strong><span>分钟段落复述</span></div>
+        <div class="metric"><strong>${stages[2]}</strong><span>分钟论证链标注</span></div>
+        <div class="metric"><strong>${stages[3]}</strong><span>分钟延迟回忆</span></div>
       </div>
-      <h4>材料</h4><p>${title}</p>
-      <h4>目标</h4><p>${goal}</p>
+      <h4>材料</h4><p>${escapeHtml(title)}</p>
+      <h4>目标</h4><p>${escapeHtml(goal)}</p>
       <h4>训练规则</h4>
       <div class="checklist">
         <label><input type="checkbox"> 读前不看 AI 摘要。</label>
@@ -532,7 +541,7 @@ description: 将 ${role} 的重复 SOP 转成可测试、可复用的 AI 技能�
     const claims = raw.split(/[。！？]/).map((s) => s.trim()).filter(Boolean);
     out.innerHTML = `
       <h4>初步拆解</h4>
-      <div class="pill-row">${claims.map((c, i) => `<span class="pill">主张 ${i + 1}: ${c.slice(0, 36)}</span>`).join("")}</div>
+      <div class="pill-row">${claims.map((c, i) => `<span class="pill">主张 ${i + 1}: ${escapeHtml(c.slice(0, 36))}</span>`).join("")}</div>
       <h4>承重连接词</h4>
       <p>${connectors.length ? connectors.join("、") : "未检测到明显承重连接词"}</p>
       <h4>审查问题</h4>
@@ -549,7 +558,7 @@ description: 将 ${role} 的重复 SOP 转成可测试、可复用的 AI 技能�
   if (id === "cli-literacy") {
     const task = text("cli-task");
     out.innerHTML = `
-      <h4>任务</h4><p>${task}</p>
+      <h4>任务</h4><p>${escapeHtml(task)}</p>
       <h4>从 GUI 到 CLI 的阶梯</h4>
       <ol>
         <li>器具用户：手动打开每个文件，看字数。</li>
@@ -572,11 +581,11 @@ description: 将 ${role} 的重复 SOP 转成可测试、可复用的 AI 技能�
     const deliverable = text("ps-deliverable");
     out.innerHTML = `
       <h4>项目制学习计划</h4>
-      <p><b>项目：</b>${project}</p>
-      <p><b>学习者：</b>${learner}</p>
+      <p><b>项目：</b>${escapeHtml(project)}</p>
+      <p><b>学习者：</b>${escapeHtml(learner)}</p>
       <div class="kanban">
         <div class="lane"><h4>待做</h4><div class="item">写清楚目标用户和痛点</div><div class="item">确定一页原型范围</div></div>
-        <div class="lane"><h4>进行中</h4><div class="item">${deliverable}</div><div class="item">记录 3 个真实反馈问题</div></div>
+        <div class="lane"><h4>进行中</h4><div class="item">${escapeHtml(deliverable)}</div><div class="item">记录 3 个真实反馈问题</div></div>
         <div class="lane"><h4>待审查</h4><div class="item">AI 审查：完成度、真实性、用户价值</div><div class="item">发布到作品集</div></div>
       </div>
       <h4>本周评分 Rubric</h4>
@@ -600,8 +609,8 @@ description: 将 ${role} 的重复 SOP 转成可测试、可复用的 AI 技能�
         <div class="metric"><strong>需补</strong><span>端到端样本</span></div>
         <div class="metric"><strong>需补</strong><span>失败率</span></div>
       </div>
-      <p><b>${name}</b> 的核心声称是：${claim}</p>
-      <h4>现有证据</h4><p>${evidence}</p>
+      <p><b>${escapeHtml(name)}</b> 的核心声称是：${escapeHtml(claim)}</p>
+      <h4>现有证据</h4><p>${escapeHtml(evidence)}</p>
       <h4>必须追问</h4>
       <ol><li>是否有未人工干预的端到端成品？</li><li>随机 20 次生成的成功率是多少？</li><li>README 声称的关键模块是否真的在主流程中调用？</li><li>有没有测试覆盖核心能力，而不仅是集成配置？</li></ol>
       <h4>结论</h4>
